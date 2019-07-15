@@ -1,0 +1,18 @@
+#cloud-config
+
+hostname: "{{ vm.name }}"
+fqdn: "{{ vm.name }}.{{ domain }}"
+manage_etc_hosts: true
+
+users: 
+{% for user in users %}
+- name:     "{{ user.name }}"
+  gecos:    "{{ user.full_name }}"
+  sudo:     ALL=(ALL) ALL
+  groups:   sudo, wheel 
+  shell:    /bin/bash
+  passwd:   {{ user.passwd }}
+  lock_passwd: False 
+  ssh_authorized_keys:
+  - "{{ user.pub_key }}" 
+{% endfor %}

@@ -1,0 +1,63 @@
+# ------------------------------------------------------------------------------ Check if VM exists 
+# -------------------------------------------------------------------------------------------------
+
+- name: "{{ vm.name }} :: Base directory "
+  file: 
+    state: directory 
+    path: /virt/vms/{{ vm.name }}
+
+- name:  "{{ vm.name }} :: Check storage "
+  stat: 
+    path: /virt/vms/{{ vm.name }}/{{ vm.name }}.qcow2
+    get_checksum: no 
+  register: vm_stat
+
+# ------------------------------------------------------------------------------ Generate kick-off 
+# -------------------------------------------------------------------------------------------------
+
+- name: "{{ vm.name }} :: cloud-config file"
+  template: 
+    src: templates/cloud-config.yml.j2
+    dest: /virt/vms/{{ vm.name }}/cloud-config.yml
+  when: vm_stat.stat.exists == false 
+
+- name: "{{ vm.name }} :: cloud-config image "
+  shell: 
+    cmd: cloud-localds /virt/vms/{{ vm.name }}/cloud-config.img /virt/vms/{{ vm.name }}/cloud-config.yml
+    creates: /virt/vms/{{ vm.name }}/cloud-config.img
+  when: vm_stat.stat.exists == false  
+
+
+# ------------------------------------------------------------------------ Configure and launch VM
+# -------------------------------------------------------------------------------------------------
+
+- name: "{{ vm.name }} :: Provision Virtual Machine disk  "
+  copy: 
+    src: /virt/images/bionic-server-cloudimg-amd64.qcow2
+    dest: /virt/vms/{{ vm.name }}/{{ vm.name }}.qcow2 
+    remote_src: true 
+  when: vm_stat.stat.exists == false 
+
+- name: "{{ vm.name }} :: Resize Virtual Machine disk "
+  shell: 
+    cmd: qemu-img resize /virt/vms/{{ vm.name }}/{{ vm.name }}.qcow2 {{ vm.disk }}
+  when: vm_stat.stat.exists == false 
+
+- name: "{{ vm.name }} :: Create virtual machine "
+  shell: 
+    cmd: >- 
+        virt-install 
+        --noautoconsole
+        --name {{ vm.name }}
+        --memory {{ vm.mem }}
+        --vcpus  {{ vm.cpu }}
+        --disk /virt/vms/{{ vm.name }}/{{ vm.name }}.qcow2,device=disk,bus=virtio 
+        --disk /virt/vms/{{ vm.name }}/cloud-config.img,device=cdrom 
+        --os-type linux 
+        --os-variant ubuntu18.04
+        --virt-type kvm 
+        --graphics none 
+        --network bridge={{ vm.bridge }},model=virtio 
+        --import
+  when: vm_stat.stat.exists == false 
+
