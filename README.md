@@ -54,12 +54,29 @@ This is a list of virtual machines that should be built.
 
 Bridge: this is the name of the bridge device that references the vlan the server will be connected to. This must already exist on the KVM host. 
 
+The virtual machine can also be built with a static IP address: 
 
+```yaml
+- name: u18-svr-002
+  cpu: 1
+  mem: 512 
+  disk: 5G
+  bridge: br10 
+  net: 
+    ip: 10.11.12.13/24
+    gateway: 10.11.12.1 
+    domain: gablogianartcollection.org
+    dns: 
+      - 1.1.1.1
+      - 9.9.9.9
+```
+
+This variable takes exactly one IP address, domain, and gateway; and two or more DNS servers. 
 
 ## How it works
 
 This role works by downloading the Ubuntu 18.04 cloud image, then converting it to Copy-On-Write format and cloning it for each virtual machine defined. 
 
-When VMs are launched, they are given a small secondary disk image that includes a `cloud-config` file. This file is generated from a template that includes all the users and system parameters that are defined in inventory. 
+When VMs are launched, they are given a small secondary disk image that includes a `cloud-config` file. This file is generated from a template that includes all the users and system parameters that are defined in inventory. There is also a network-config file that contains network metadata in Netplan-V2 format. 
 
 Before running this, ensure that networking is correctly configured on the KVM hosts. 

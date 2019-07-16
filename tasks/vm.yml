@@ -21,10 +21,20 @@
     dest: /virt/vms/{{ vm.name }}/cloud-config.yml
   when: vm_stat.stat.exists == false 
 
+- name: "{{ vm.name }} :: network metadata file"
+  template: 
+    src: templates/network-config-v2.yml.j2
+    dest: /virt/vms/{{ vm.name }}/network-config-v2.yml
+  when: vm_stat.stat.exists == false 
+
 - name: "{{ vm.name }} :: cloud-config image "
   shell: 
-    cmd: cloud-localds /virt/vms/{{ vm.name }}/cloud-config.img /virt/vms/{{ vm.name }}/cloud-config.yml
     creates: /virt/vms/{{ vm.name }}/cloud-config.img
+    cmd: >-
+      cloud-localds 
+      --network-config=/virt/vms/{{ vm.name }}/network-config-v2.yml
+      /virt/vms/{{ vm.name }}/cloud-config.img 
+      /virt/vms/{{ vm.name }}/cloud-config.yml
   when: vm_stat.stat.exists == false  
 
 
