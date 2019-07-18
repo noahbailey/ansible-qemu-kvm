@@ -1,6 +1,8 @@
 # ansible-qemu-kvm
 Ansible role to provision virtual machines using the QEMU and KVM systems. 
 
+Think of it like _ OpenStack for poor people._
+
 Currently, this role only creates virtual machines running the lite version of Ubuntu 18.04. Future versions may expand on this, but it is the primary server operating system that I use. 
 
 ## Usage
