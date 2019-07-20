@@ -71,3 +71,11 @@
         --import
   when: vm_stat.stat.exists == false 
 
+
+# ------------------------------------------------------------------------ Set VM Autostartup 
+# -------------------------------------------------------------------------------------------------
+
+- name: "{{ vm.name }} start with host startup"
+  virt: 
+    name: "{{ vm.name }}"
+    autostart: true 
