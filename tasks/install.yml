@@ -63,6 +63,6 @@
   file: 
     path: /virt/vms
     state: directory 
-    owner: libvirt-qemu
-    group: kvm 
-    mode: u=rwX,g=rX,o=
+    owner: root
+    group: root
+    mode: 0755
