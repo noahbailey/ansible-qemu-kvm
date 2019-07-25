@@ -1,7 +1,7 @@
 # ansible-qemu-kvm
 Ansible role to provision virtual machines using the QEMU and KVM systems. 
 
-Think of it like _ OpenStack for poor people._
+Think of it like _OpenStack for poor people._
 
 Currently, this role only creates virtual machines running the lite version of Ubuntu 18.04. Future versions may expand on this, but it is the primary server operating system that I use. 
 
@@ -74,6 +74,16 @@ The virtual machine can also be built with a static IP address:
 ```
 
 This variable takes exactly one IP address, domain, and gateway; and two or more DNS servers. 
+
+#### Default Values
+
+If no value is supplied, the default settings will be used: 
+
+* CPU: 1 core
+* Memory: 512 MB
+* Disk: 5GB .qcow image
+* Bridge: Default libvirt NAT network 
+* Network: DHCP
 
 ## How it works
 
