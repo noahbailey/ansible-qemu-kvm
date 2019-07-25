@@ -1,12 +1,12 @@
 # ------------------------------------------------------------------------------ Check if VM exists 
 # -------------------------------------------------------------------------------------------------
 
-- name: "{{ vm.name }} :: Base directory "
+- name: "{{ vm.name }} :: VM storage location "
   file: 
     state: directory 
     path: /virt/vms/{{ vm.name }}
 
-- name:  "{{ vm.name }} :: Check storage "
+- name:  "{{ vm.name }} :: copy-on-write image"
   stat: 
     path: /virt/vms/{{ vm.name }}/{{ vm.name }}.qcow2
     get_checksum: no 
@@ -50,7 +50,7 @@
 
 - name: "{{ vm.name }} :: Resize Virtual Machine disk "
   shell: 
-    cmd: qemu-img resize /virt/vms/{{ vm.name }}/{{ vm.name }}.qcow2 {{ vm.disk }}
+    cmd: qemu-img resize /virt/vms/{{ vm.name }}/{{ vm.name }}.qcow2 {{ vm.disk|default('5G') }}
   when: vm_stat.stat.exists == false 
 
 - name: "{{ vm.name }} :: Create virtual machine "
@@ -59,15 +59,15 @@
         virt-install 
         --noautoconsole
         --name {{ vm.name }}
-        --memory {{ vm.mem }}
-        --vcpus  {{ vm.cpu }}
+        --memory {{ vm.mem|default('512') }}
+        --vcpus  {{ vm.cpu|default('1') }}
         --disk /virt/vms/{{ vm.name }}/{{ vm.name }}.qcow2,device=disk,bus=virtio 
         --disk /virt/vms/{{ vm.name }}/cloud-config.img,device=cdrom 
         --os-type linux 
         --os-variant ubuntu18.04
         --virt-type kvm 
         --graphics none 
-        --network bridge={{ vm.bridge }},model=virtio 
+        --network bridge={{ vm.bridge|default('default') }},model=virtio 
         --import
   when: vm_stat.stat.exists == false 
 
