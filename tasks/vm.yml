@@ -1,81 +1,73 @@
-# ------------------------------------------------------------------------------ Check if VM exists 
-# -------------------------------------------------------------------------------------------------
-
+---
+# Check if VM exists
 - name: "{{ vm.name }} :: VM storage location "
-  file: 
-    state: directory 
+  file:
+    state: directory
     path: /virt/vms/{{ vm.name }}
 
-- name:  "{{ vm.name }} :: copy-on-write image"
-  stat: 
+- name: "{{ vm.name }} :: copy-on-write image"
+  stat:
     path: /virt/vms/{{ vm.name }}/{{ vm.name }}.qcow2
-    get_checksum: no 
+    get_checksum: false
   register: vm_stat
 
-# ------------------------------------------------------------------------------ Generate kick-off 
-# -------------------------------------------------------------------------------------------------
-
+# Generate kick-off
 - name: "{{ vm.name }} :: cloud-config file"
-  template: 
+  template:
     src: templates/cloud-config.yml.j2
     dest: /virt/vms/{{ vm.name }}/cloud-config.yml
-  when: vm_stat.stat.exists == false 
+  when: vm_stat.stat.exists == false
 
 - name: "{{ vm.name }} :: network metadata file"
-  template: 
+  template:
     src: templates/network-config-v2.yml.j2
     dest: /virt/vms/{{ vm.name }}/network-config-v2.yml
-  when: vm_stat.stat.exists == false 
+  when: vm_stat.stat.exists == false
 
 - name: "{{ vm.name }} :: cloud-config image "
-  shell: 
+  shell:
     creates: /virt/vms/{{ vm.name }}/cloud-config.img
     cmd: >-
-      cloud-localds 
-      --network-config=/virt/vms/{{ vm.name }}/network-config-v2.yml
-      /virt/vms/{{ vm.name }}/cloud-config.img 
-      /virt/vms/{{ vm.name }}/cloud-config.yml
-  when: vm_stat.stat.exists == false  
+      cloud-localds
+       --network-config=/virt/vms/{{ vm.name }}/network-config-v2.yml
+       /virt/vms/{{ vm.name }}/cloud-config.img
+       /virt/vms/{{ vm.name }}/cloud-config.yml
+  when: vm_stat.stat.exists == false
 
 
-# ------------------------------------------------------------------------ Configure and launch VM
-# -------------------------------------------------------------------------------------------------
-
-- name: "{{ vm.name }} :: Provision Virtual Machine disk  "
-  copy: 
+# Configure and launch VM
+- name: "{{ vm.name }} :: Provision Virtual Machine disk"
+  copy:
     src: /virt/images/bionic-server-cloudimg-amd64.qcow2
-    dest: /virt/vms/{{ vm.name }}/{{ vm.name }}.qcow2 
-    remote_src: true 
-  when: vm_stat.stat.exists == false 
+    dest: /virt/vms/{{ vm.name }}/{{ vm.name }}.qcow2
+    remote_src: true
+  when: vm_stat.stat.exists == false
 
-- name: "{{ vm.name }} :: Resize Virtual Machine disk "
-  shell: 
+- name: "{{ vm.name }} :: Resize Virtual Machine disk"
+  shell:
     cmd: qemu-img resize /virt/vms/{{ vm.name }}/{{ vm.name }}.qcow2 {{ vm.disk|default('5G') }}
-  when: vm_stat.stat.exists == false 
+  when: vm_stat.stat.exists == false
 
 - name: "{{ vm.name }} :: Create virtual machine "
-  shell: 
-    cmd: >- 
-        virt-install 
+  shell:
+    cmd: >-
+        virt-install
         --noautoconsole
         --name {{ vm.name }}
         --memory {{ vm.mem|default('512') }}
         --vcpus  {{ vm.cpu|default('1') }}
-        --disk /virt/vms/{{ vm.name }}/{{ vm.name }}.qcow2,device=disk,bus=virtio 
-        --disk /virt/vms/{{ vm.name }}/cloud-config.img,device=cdrom 
-        --os-type linux 
+        --disk /virt/vms/{{ vm.name }}/{{ vm.name }}.qcow2,device=disk,bus=virtio
+        --disk /virt/vms/{{ vm.name }}/cloud-config.img,device=cdrom
+        --os-type linux
         --os-variant ubuntu18.04
-        --virt-type kvm 
-        --graphics none 
-        --network bridge={{ vm.bridge|default('default') }},model=virtio 
+        --virt-type kvm
+        --graphics none
+        --network bridge={{ vm.bridge|default('default') }},model=virtio
         --import
-  when: vm_stat.stat.exists == false 
+  when: vm_stat.stat.exists == false
 
-
-# ------------------------------------------------------------------------ Set VM Autostartup 
-# -------------------------------------------------------------------------------------------------
-
+# Set VM Autostartup
 - name: "{{ vm.name }} start with host startup"
-  virt: 
+  virt:
     name: "{{ vm.name }}"
-    autostart: true 
+    autostart: true

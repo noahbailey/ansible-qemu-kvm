@@ -1,0 +1,9 @@
+---
+galaxy_info:
+  role_name: ansible_qemu_kvm
+  author: Noah Bailey
+  description: Build & Manage KVM virtual machines
+  license: GPLv3
+  min_ansible_version: 2.9
+  galaxy_tags: []
+dependencies: []
